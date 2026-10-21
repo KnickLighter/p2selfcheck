@@ -1,1 +1,42 @@
+p2selfcheck — php2shell self check (CVE-2026-109618/9)
+=========================================================================
+  [RED   ] VERDICT: LIKELY VULNERABLE — inside the affected range
+      - This PHP (8.4.4) is in the php2shell-affected range (CVE-2026-109618 / CVE-2026-109619). Your branch was fixed in 8.4.27 — ask your hosting provider to upgrade; managed hosts usually have a one-click PHP version switch. This is a PHP-core update, not something to do in application code.
+      - The red rows above are enablers of the exploit chain that are present on THIS server. The yellow rows need a decision. The full RCE path also needs an LFI sink in your APPLICATION code (row 10) — search your codebase for that.
+      - After the upgrade, re-run this check on EVERY domain/subdomain/staging box you host — each may run its own PHP.
+-------------------------------------------------------------------------
+  [RED   ] PHP version (the one serving this file)    8.4.4
+             8.4.4 is below the fixed build 8.4.27 — inside the affected range — this branch needs 8.4.27 or later
 
+  [GREEN ] session extension                          loaded
+             the php2shell chain rides the internal upload-progress session mechanism — it cannot fire on a PHP without the session extension. Loaded = the mechanism is in principle reachable. (Almost always loaded; managed hosts ship it by default.)
+
+  [RED   ] session.upload_progress.enabled            On
+             This is the internal mechanism the bug abuses. On: the mechanism is available to the exploit (PHP default). Off: the upload-progress session record is not materialised — the core step of the chain is weakened (rare setting).
+
+  [RED   ] session.upload_progress.cleanup            Off
+             Off keeps the poisoned progress data in the session file after the request ends (helps the attacker). On (default) removes it at the end of each request — still exploitable, but less persistent.
+
+  [YELLOW] max_multipart_body_parts                   4
+             The buggy parsing path fires when the request contains MORE file-parts than this limit. The verified exploit payload uses 6 parts; if your limit is ≥ that (or unset), the trigger is straightforward for an attacker.
+
+  [YELLOW] session.use_strict_mode                    Off  (PHP default)
+             Off: PHP honours an attacker-supplied session ID on first contact — the simplest exploit path. On: PHP ignores client-provided IDs — the exploit still works via the Set-Cookie header the server itself emits, so this is friction, not a fix.
+
+  [RED   ] session.save_path (where a payload would land) /tmp/sessdata  —  writable
+             The attack leaves a small file  sess_<id>  in this directory. If it is not writable, or is a custom (redis/db) handler, the chain breaks at the "read the payload" step. Non-writable = green above is genuinely helpful here.
+
+  [YELLOW] expose_php                                 On  (default)
+             On: the PHP version is advertised in the X-Powered-By header — scanner-style tools that check response headers see it. Off hides it from header-based scans. Neither setting fixes the bug by itself.
+
+  [INFO  ] upload_max_filesize / post_max_size        2M  |  8M
+             The exploit body is about 1 KB. Any sensible limit is more than enough headroom — these two values are context, not a risk factor of their own.
+
+  [YELLOW] LFI sink in YOUR app code                  search manually (see meaning)
+             The full RCE chain also needs a page in your application that includes or reads a user-controlled path — e.g.  include($_GET['page']),  require, or  file_get_contents on request input. Search your codebase for those patterns (or ask your developer). If no such page exists, the bug is harder to reach but the PHP version is still in the affected range.
+
+Next steps:
+  * Ask your hosting provider to move your account to a fixed PHP build — 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12 or later, whichever matches your branch.
+  * While waiting for the upgrade: search your codebase for  include(…$_GET…),  require(…$_POST…),  file_get_contents(…request input…),  or any include/require that uses a query string. Note every hit — those are your LFI-sink candidates.
+  * Re-run this check after the upgrade, and on every other domain you host.
+  * Delete p2selfcheck.php when you are done — it reveals your PHP version to anyone who can reach the URL.

@@ -13,22 +13,20 @@ vulnerability range.
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │  [RED   ] VERDICT: LIKELY VULNERABLE — inside the affected range   │
-│                                                            PHP 8.4.4 │
+│                                                          PHP 8.4.4 │
 ├────────────────────────────────────────────────────────────────────┤
 │  [RED]    PHP version (serving this file)      8.4.4               │
 │  [GREEN]  session extension                    loaded              │
-│  [RED]    session.upload_progress.enabled      On                 │
-│  [YELLOW] session.upload_progress.cleanup      On  (default)      │
-│  [YELLOW] max_multipart_body_parts             4                  │
-│  [YELLOW] session.use_strict_mode              Off  (default)     │
-│  [RED]    session.save_path                    /tmp/sessdata — wrt│
-│  [YELLOW] expose_php                           On  (default)      │
-│  [INFO]   upload_max_filesize / post_max_size  2M  |  8M          │
+│  [RED]    session.upload_progress.enabled      On                  │
+│  [YELLOW] session.upload_progress.cleanup      On  (default)       │
+│  [YELLOW] max_multipart_body_parts             4                   │
+│  [YELLOW] session.use_strict_mode              Off  (default)      │
+│  [RED]    session.save_path                    /tmp/sessdata — wrt │
+│  [YELLOW] expose_php                           On  (default)       │
+│  [INFO]   upload_max_filesize / post_max_size  2M  |  8M           │
 │  [YELLOW] LFI sink in YOUR code                search manually     │
 └────────────────────────────────────────────────────────────────────┘
 ```
-*(output trimmed for the banner — the real page shows the full verdict text
-and per-check explanations)*
 
 <p align="center">
   <img src="docs/screenshot.png" alt="p2selfcheck in the browser — verdict banner plus the check table" width="820">
